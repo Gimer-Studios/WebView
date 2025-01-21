@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebView</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        video {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        #device-select {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="device-select">
+        <label for="video-inputs">Select Device:</label>
+        <select id="video-inputs"></select>
+    </div>
+    <video id="video" autoplay playsinline></video>
+
+    <script>
+        const videoElement = document.getElementById('video');
+        const deviceSelect = document.getElementById('video-inputs');
+
+        async function getDevices() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+            videoDevices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.text = device.label || `Camera ${deviceSelect.length + 1}`;
+                deviceSelect.appendChild(option);
+            });
+
+            deviceSelect.addEventListener('change', () => {
+                startStream(deviceSelect.value);
+            });
+        }
+
+        async function startStream(deviceId) {
+            if (videoElement.srcObject) {
+                videoElement.srcObject.getTracks().forEach(track => track.stop());
+            }
+
+            const constraints = {
+                video: {
+                    deviceId: deviceId ? { exact: deviceId } : undefined,
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
+                    frameRate: { ideal: 60, max: 60 }
+                }
+            };
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                videoElement.srcObject = stream;
+            } catch (error) {
+                console.error('Error accessing media devices.', error);
+            }
+        }
+
+        // Initialize
+        getDevices();
+        startStream();
+    </script>
+</body>
+</html>

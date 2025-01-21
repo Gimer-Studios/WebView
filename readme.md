@@ -1,0 +1,1 @@
+Simple tool to display webcam or capture card in browser. Work for a future project.
